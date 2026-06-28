@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/styles.css">
+    <title>Acceso Administrador</title>
+</head>
+<body class="body-login">
+    <div class="login-container-page">
+        <div class="login-card">
+            <h2>Acceso Administrador</h2>
+            <form id="admin-login-form">
+                <input type="email" id="correo" placeholder="Correo Administrador" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit" style="margin-top:15px; width:100%;">Entrar al Panel</button>
+            </form>
+            <p><a href="login.html">Volver a login alumno</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch('auth_admin.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    correo: document.getElementById('correo').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await response.json();
+            if (data.status === "success") {
+                sessionStorage.setItem("rol", "admin");
+                window.location.href = "admin.html";
+            } else {
+                alert("Acceso denegado: " + data.message);
+            }
+        });
+    </script>
+</body>
+</html>

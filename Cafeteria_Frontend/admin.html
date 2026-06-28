@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración | K-FE</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="body-login">
+
+    <script>
+        if (sessionStorage.getItem("rol") !== "admin") {
+            alert("Acceso denegado: Solo administradores.");
+            window.location.href = "login.html";
+        }
+    </script>
+
+    <main>
+        <div class="card-section">
+            <h2>Panel de Administrador</h2>
+            
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ccc;">
+                <h3>Agregar Nuevo Producto</h3>
+                <form id="form-agregar">
+                    <input type="text" id="nombre-prod" placeholder="Nombre" required>
+                    <input type="text" id="desc-prod" placeholder="Descripción" required>
+                    <input type="text" id="cat-prod" placeholder="Categoría" required>
+                    <input type="number" id="precio-prod" placeholder="Precio" step="0.01" required>
+                    <button type="submit">Guardar Producto</button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="tabla-menu">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-menu">
+                        </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="window.location.href='index.html'">Volver al Menú</button>
+                <button onclick="cerrarSesion()" style="border-color: red;">Cerrar Sesión</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. Cargar productos
+        async function cargarProductos() {
+            const res = await fetch('api_menu.php');
+            const data = await res.json();
+            const tbody = document.getElementById('admin-menu');
+            tbody.innerHTML = '';
+            
+            data.forEach(prod => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="text" id="nombre_${prod.id}" value="${prod.nombre}"></td>
+                        <td><input type="text" id="desc_${prod.id}" value="${prod.descripcion}"></td>
+                        <td><input type="text" id="cat_${prod.id}" value="${prod.categoria}"></td>
+                        <td><input type="number" id="precio_${prod.id}" value="${prod.precio}" step="0.01"></td>
+                        <td>
+                            <button onclick="guardarCambios(${prod.id})">Guardar</button>
+                            <button onclick="eliminarProducto(${prod.id})" style="background:red; color:white;">Eliminar</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // 2. Agregar Producto
+        document.getElementById('form-agregar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                nombre: document.getElementById('nombre-prod').value,
+                descripcion: document.getElementById('desc-prod').value,
+                categoria: document.getElementById('cat-prod').value,
+                precio: parseFloat(document.getElementById('precio-prod').value)
+            };
+
+            const res = await fetch('agregar_producto.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            
+            if ((await res.json()).status === "success") {
+                alert("Producto agregado");
+                cargarProductos();
+            }
+        });
+
+        // 3. Actualizar Producto
+        async function guardarCambios(id) {
+            const data = {
+                id: id,
+                nombre: document.getElementById('nombre_' + id).value,
+                descripcion: document.getElementById('desc_' + id).value,
+                categoria: document.getElementById('cat_' + id).value,
+                precio: document.getElementById('precio_' + id).value
+            };
+
+            const res = await fetch('actualizar_producto.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            
+            if ((await res.json()).status === "success") {
+                alert("¡Actualizado con éxito!");
+            }
+        }
+
+        // 4. Eliminar Producto
+        async function eliminarProducto(id) {
+            if(!confirm("¿Eliminar producto?")) return;
+            const res = await fetch('eliminar_producto.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: id })
+            });
+            if((await res.json()).status === "success") cargarProductos();
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        }
+
+        cargarProductos();
+    </script>
+</body>
+</html>

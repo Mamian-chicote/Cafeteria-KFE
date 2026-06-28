@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - La K-FE Escolar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="body-login">
+
+    <div class="login-container-page">
+        <div class="login-card">
+            <img src="https://www.bing.com/th/id/OIP.YOZCbYP7wWTCFaJnnuhUyAHaHa?w=193&h=193&c=8&rs=1&qlt=90&o=6&pid=3.1&rm=2" class="logo" alt="Logo Cafetería" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px;">
+            <h2>Iniciar Sesión</h2>
+            <p>Introduce tus credenciales para acceder a la K-FE Escolar</p>
+            
+            <div id="login-error" class="error-box" style="display: none;"></div>
+            
+            <form id="login-form">
+                <input type="email" id="correo" placeholder="Correo" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit" style="margin-top: 15px; width: 100%;">Ingresar</button>
+            </form>
+            
+            <p style="margin-top: 15px;">¿No tienes cuenta? <a href="entrar.html" style="color: var(--neon-blue);">Regístrate aquí</a></p>
+				<p style="margin-top: 20px;">
+    ¿Eres administrador? <a href="login_admin.html" style="color: var(--neon-purple);">Entra aquí</a>
+</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const correo = document.getElementById('correo').value;
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('login-error');
+
+            const response = await fetch('auth.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ correo, password })
+            });
+            
+            const data = await response.json();
+
+            if (data.status === "success") {
+                // Guardamos sesión y rol
+                sessionStorage.setItem("sesion_activa", "true");
+                sessionStorage.setItem("rol", data.rol); 
+
+                // Redirección inteligente según el rol
+                if (data.rol === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "index.html";
+                }
+            } else {
+                // Mostrar error en el div que ya tenías
+                errorBox.textContent = data.message;
+                errorBox.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
